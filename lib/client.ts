@@ -1,0 +1,4 @@
+import {toast} from 'sonner';
+export async function api(path:string,body?:any){const r=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});const d:any=await r.json();if(!r.ok){if(r.status===401)toast.error('Sign in to continue.',{action:{label:'Sign in',onClick:()=>{window.location.href='/signin-with-chatgpt?return_to='+encodeURIComponent(location.pathname)}}});throw new Error(d.error||'Unable to complete this request.')}return d}
+export function compact(n:number){return Intl.NumberFormat('en',{notation:'compact',maximumFractionDigits:1}).format(n||0)}
+export function date(s:string){return new Date(s).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}

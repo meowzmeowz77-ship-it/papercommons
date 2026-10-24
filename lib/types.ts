@@ -1,0 +1,7 @@
+export type Paper={id:string;slug:string;title:string;description:string;uploader_id:string;username:string;display_name:string;board:string;grade:string;subject:string;exam:string;school:string;year:number;marks:number|null;duration:number|null;difficulty:string;chapters:string;answer_key:number;premium_only:number;can_access?:boolean;status:string;featured:number;sample:number;views:number;downloads:number;created_at:string;rating:number;rating_count:number;comment_count:number;saved:number;saves_count:number};
+export type User={avatar?:string;id:string;username:string;display_name:string;email?:string;board:string;grade:string;school:string;city:string;role:string;status:string;plan:string;premium_until?:string|null;onboarded:number;notify:number;created_at:string};
+export type AVKSubmission={paperId:string;answerSheetKeys:string[];markingSchemeKey?:string};
+export type AVKResult={questions:{question:string;marks:number;maximum:number;confidence:number;mistakes:string[];feedback:string}[];total:number;confidence:number;improvements:string[]};
+export interface AVKProvider{evaluate(submission:AVKSubmission):Promise<AVKResult>}
+export const SUBJECTS=['Mathematics','Science','Social Science','English','Hindi','Computer Science'];
+export const EXAMS=['Weekly Test','Unit Test','Periodic Test','Mid-Term','Final Exam','Pre-Board','Board Paper','Sample Paper','Practice Paper','Chapter Test','Coaching Test','Mock Test'];

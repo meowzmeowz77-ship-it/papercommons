@@ -1,0 +1,4 @@
+PaperCommons live version 9
+Git commit: 256b85aebe2f69d96634d7815aa307cdd44b9b36
+Original tracked files: 184
+Export excludes credentials, .git, installed packages, generated build and live runtime data.

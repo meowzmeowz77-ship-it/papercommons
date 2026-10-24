@@ -1,0 +1,69 @@
+/* Modern Athletic Gray & Energetic Focus Orange Design System Integration */
+body {
+  background: #070B14;
+  background-image: 
+    radial-gradient(rgba(255, 101, 0, 0.10) 1px, transparent 1px),
+    radial-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px, 56px 56px;
+  background-position: 0 0, 14px 14px;
+  font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+  color: #F8FAFC;
+}
+
+.app-layout { max-width: 1280px; }
+.main-content { padding: 32px 32px 0; }
+.stitch-native { min-width: 0; isolation: isolate; }
+.stitch-paper-card { height: 100%; }
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.material-symbols-outlined[class*="text-[14px]"] { font-size: 14px; }
+.material-symbols-outlined[class*="text-[15px]"] { font-size: 15px; }
+.material-symbols-outlined[class*="text-[16px]"] { font-size: 16px; }
+.material-symbols-outlined[class*="text-[17px]"] { font-size: 17px; }
+.material-symbols-outlined[class*="text-[18px]"] { font-size: 18px; }
+.material-symbols-outlined[class*="text-[19px]"] { font-size: 19px; }
+.material-symbols-outlined[class*="text-[20px]"] { font-size: 20px; }
+.material-symbols-outlined[class*="text-[22px]"] { font-size: 22px; }
+.material-symbols-outlined[class*="text-[24px]"] { font-size: 24px; }
+.material-symbols-outlined[class*="text-[26px]"] { font-size: 26px; }
+.material-symbols-outlined[class*="text-[28px]"] { font-size: 28px; }
+.material-symbols-outlined[class*="text-[32px]"] { font-size: 32px; }
+
+.btn-cta-glow { box-shadow: 0 4px 20px rgba(255, 101, 0, 0.35); }
+
+.stitch-native footer { display: block; padding: 0; }
+.stitch-native #feed-anchor { scroll-margin-top: 135px; }
+.stitch-native .feed-tab { font-family: inherit; }
+.stitch-native .feed-tab[aria-pressed=true] { outline-offset: 2px; }
+
+@media(min-width: 1500px) { .main-content { padding: 32px 32px 0; } }
+@media(max-width: 1320px) { .stitch-header-search { display: none; } }
+@media(max-width: 1279px) and (min-width: 640px) { .stitch-header-search { display: block; } }
+@media(max-width: 800px) { .main-content { padding: 28px 24px 0; } }
+@media(max-width: 600px) {
+  .main-content { padding: 24px 16px 0; }
+  .stitch-brand { gap: 7px; }
+  .stitch-brand>span:first-child { padding: 5px; border-radius: 11px; }
+  .stitch-brand>span:last-child>span:first-child { font-size: 17px; }
+  .stitch-upload { padding: 8px; }
+  .stitch-notifications { padding: 8px; }
+  .stitch-signin { padding: 7px 8px; font-size: 10px; white-space: nowrap; }
+  .stitch-native footer { margin-top: 32px; }
+}
+@media(max-width: 380px) { .stitch-notifications { display: none; } }
+@media(prefers-reduced-motion: reduce) { * { animation: none!important; transition: none!important; } }

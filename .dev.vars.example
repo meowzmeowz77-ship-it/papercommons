@@ -1,0 +1,3 @@
+# LOCAL DEVELOPMENT ONLY: built-in localhost mock identity
+ADMIN_EMAILS=seedy@sites.test
+SITE_ORIGIN=http://localhost:5173
