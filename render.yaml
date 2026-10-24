@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: papercommons
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: ADMIN_EMAILS
+        value: vihan.agrawal4@gmail.com
