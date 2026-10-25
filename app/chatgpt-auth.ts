@@ -18,6 +18,16 @@ const SIGN_IN_PATH = "/signin-with-chatgpt";
 const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
+export function getAdminSignature(email: string, secret = '@Cr7meow30'): string {
+  let hash = 5381;
+  const str = `${email.toLowerCase().trim()}:${secret}:papercommons_admin_v2`;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = hash & hash;
+  }
+  return 'pc_sig_' + Math.abs(hash).toString(36) + '_' + Buffer.from(secret).toString('base64').slice(0, 8);
+}
+
 export function parseGoogleSession(cookieHeader: string | null): ChatGPTUser | null {
   if (!cookieHeader) return null;
   const match = cookieHeader.match(/pc_google_auth=([^;]+)/);
@@ -33,6 +43,14 @@ export function parseGoogleSession(cookieHeader: string | null): ChatGPTUser | n
     const data = JSON.parse(jsonStr);
     if (data && data.email) {
       const email = String(data.email).trim().toLowerCase();
+      // Strict security: if claiming to be admin, require valid admin signature
+      if (email === 'vihan.agrawal4@gmail.com') {
+        const expectedSig = getAdminSignature(email, process.env.ADMIN_PASSWORD || '@Cr7meow30');
+        if (!data.adminSig || data.adminSig !== expectedSig) {
+          // Unverified or rogue session: revoke immediately
+          return null;
+        }
+      }
       const displayName = data.displayName || data.fullName || (email === 'vihan.agrawal4@gmail.com' ? 'Vihan Agrawal' : email.split('@')[0]);
       return {
         userId: data.userId || 'google_' + email.replace(/[^a-zA-Z0-9]/g, '_'),
@@ -42,14 +60,15 @@ export function parseGoogleSession(cookieHeader: string | null): ChatGPTUser | n
       };
     }
   } catch {
+    // Legacy fallback only for non-admin accounts
     try {
       const email = decodeURIComponent(match[1]).trim().toLowerCase();
-      if (email.includes('@')) {
+      if (email.includes('@') && email !== 'vihan.agrawal4@gmail.com') {
         return {
           userId: 'google_' + email.replace(/[^a-zA-Z0-9]/g, '_'),
-          displayName: email === 'vihan.agrawal4@gmail.com' ? 'Vihan Agrawal' : email.split('@')[0],
+          displayName: email.split('@')[0],
           email,
-          fullName: email === 'vihan.agrawal4@gmail.com' ? 'Vihan Agrawal' : email.split('@')[0],
+          fullName: email.split('@')[0],
         };
       }
     } catch {}

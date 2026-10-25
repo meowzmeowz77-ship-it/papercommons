@@ -9,19 +9,30 @@ import {boundedJson} from '@/lib/server/body';
 import {paperDetail} from '@/lib/server/paper-detail';
 import {premiumInfo,premiumCommand,joinPremiumInterest,premiumAdminSummary,withPaperAccess} from '@/lib/server/premium';
 import {receiveAnalytics,trafficSummary} from '@/lib/server/analytics';
+import {getAdminSignature} from '@/app/chatgpt-auth';
+import {env} from 'cloudflare:workers';
 export const dynamic='force-dynamic';
 const json=(data:any,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 async function handle(req:NextRequest){try{await seed();const parts=new URL(req.url).pathname.replace(/^\/api\//,'').split('/').map(decodeURIComponent),[section,key,action]=parts,url=new URL(req.url);let u=await identity();
 if(section==='analytics'&&req.method==='POST')return json(await receiveAnalytics(req,u));
 if(section==='auth'){
   if(key==='google'){
+    const ADMIN_PASSWORD=(env as any).ADMIN_PASSWORD||process.env.ADMIN_PASSWORD||'@Cr7meow30';
     if(req.method==='GET'){
       const email=(url.searchParams.get('email')||'').trim().toLowerCase();
-      const returnTo=url.searchParams.get('return_to')||(email==='vihan.agrawal4@gmail.com'?'/admin':'/');
+      const isAdminEmail=email==='vihan.agrawal4@gmail.com';
+      if(isAdminEmail){
+        const pass=(url.searchParams.get('password')||'').trim();
+        if(pass!==ADMIN_PASSWORD){
+          return Response.redirect(new URL('/admin?error=unauthorized',req.url));
+        }
+      }
+      const returnTo=url.searchParams.get('return_to')||(isAdminEmail?'/admin':'/');
       if(email&&email.includes('@')){
-        const name=url.searchParams.get('name')||(email==='vihan.agrawal4@gmail.com'?'Vihan Agrawal':email.split('@')[0]);
+        const name=url.searchParams.get('name')||(isAdminEmail?'Vihan Agrawal':email.split('@')[0]);
         const googleId='google_'+email.replace(/[^a-zA-Z0-9]/g,'_');
-        const token=Buffer.from(JSON.stringify({userId:googleId,email,displayName:name,fullName:name})).toString('base64');
+        const adminSig=isAdminEmail?getAdminSignature(email,ADMIN_PASSWORD):undefined;
+        const token=Buffer.from(JSON.stringify({userId:googleId,email,displayName:name,fullName:name,adminSig})).toString('base64');
         return new Response(null,{status:302,headers:{'Location':returnTo,'Set-Cookie':`pc_google_auth=${token}; Path=/; SameSite=Lax; HttpOnly; Max-Age=2592000`,'Cache-Control':'no-store'}});
       }
       return Response.redirect(new URL('/',req.url));
@@ -30,15 +41,22 @@ if(section==='auth'){
       const b:any=await boundedJson(req);
       const email=str(b.email,120).trim().toLowerCase();
       if(!email||!email.includes('@'))throw new AppError(400,'A valid Google email is required.');
-      const name=str(b.name,80)||(email==='vihan.agrawal4@gmail.com'?'Vihan Agrawal':email.split('@')[0]);
+      const isAdminEmail=email==='vihan.agrawal4@gmail.com';
+      if(isAdminEmail){
+        const pass=String(b.password||b.adminSecret||'').trim();
+        if(!pass||pass!==ADMIN_PASSWORD){
+          throw new AppError(403,'Unauthorized: Incorrect administrator password. Access to vihan.agrawal4@gmail.com is restricted.');
+        }
+      }
+      const name=str(b.name,80)||(isAdminEmail?'Vihan Agrawal':email.split('@')[0]);
       const googleId='google_'+email.replace(/[^a-zA-Z0-9]/g,'_');
-      const token=Buffer.from(JSON.stringify({userId:googleId,email,displayName:name,fullName:name})).toString('base64');
-      const isAdmin=email==='vihan.agrawal4@gmail.com';
+      const adminSig=isAdminEmail?getAdminSignature(email,ADMIN_PASSWORD):undefined;
+      const token=Buffer.from(JSON.stringify({userId:googleId,email,displayName:name,fullName:name,adminSig})).toString('base64');
       const resHeaders=new Headers();
       resHeaders.append('Set-Cookie',`pc_google_auth=${token}; Path=/; SameSite=Lax; HttpOnly; Max-Age=2592000`);
       resHeaders.append('Content-Type','application/json');
       resHeaders.append('Cache-Control','no-store');
-      return new Response(JSON.stringify({ok:true,user:{id:googleId,email,display_name:name,role:isAdmin?'admin':'student'}}),{status:200,headers:resHeaders});
+      return new Response(JSON.stringify({ok:true,user:{id:googleId,email,display_name:name,role:isAdminEmail?'admin':'student'}}),{status:200,headers:resHeaders});
     }
   }
   if(key==='signout'){
