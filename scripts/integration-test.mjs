@@ -86,8 +86,9 @@ await request('premium/user/test-student',{id:'test-student',plan:'free',reason:
 await request('premium/user/test-student',{id:'test-student',plan:'premium',days:999,reason:'Invalid duration'},'admin',400);
 await request('premium/user/test-student',{id:'test-student',plan:'premium',days:1},'admin',400);
 await request('premium/interest',{});await request('premium/interest',{});assert.equal((await request('admin',undefined,'admin')).premium.interest_count,1);
-const plan=await request('premium',undefined,null);assert.equal(plan.price_inr,299);assert.equal(plan.interval,'month');assert.equal(plan.checkout_enabled,false);
-await request('billing/checkout',{},'student',503);await request('avk',{},'student',501);
+const plan=await request('premium',undefined,null);assert.equal(plan.price_inr,299);assert.equal(plan.interval,'month');assert.equal(plan.checkout_enabled,true);
+const avkRes=await request('avk',{textSubmission:'Given: u=20, a=-2. Formula: v=u+at'},'student');assert.equal(avkRes.ok,true);assert.ok(avkRes.result.total>0);
+const orderRes=await request('billing/razorpay/order',{},'student');assert.equal(orderRes.amount,29900);
 const analyticsBody={kind:'page_view',path:'/explore',client_id:'12345678-1234-1234-1234-123456789012'};
 async function telemetry(body,origin='https://test.local'){const res=await mf.dispatchFetch('https://test.local/api/analytics',{method:'POST',headers:{'Content-Type':'application/json',Origin:origin},body:JSON.stringify(body)});return {status:res.status,data:await res.json()}}
 assert.equal((await telemetry(analyticsBody)).data.recorded,true);assert.equal((await telemetry(analyticsBody)).data.recorded,false);

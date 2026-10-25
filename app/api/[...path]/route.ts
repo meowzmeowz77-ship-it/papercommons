@@ -10,6 +10,8 @@ import {paperDetail} from '@/lib/server/paper-detail';
 import {premiumInfo,premiumCommand,joinPremiumInterest,premiumAdminSummary,withPaperAccess} from '@/lib/server/premium';
 import {receiveAnalytics,trafficSummary} from '@/lib/server/analytics';
 import {getAdminSignature} from '@/app/chatgpt-auth';
+import {handleAvkEvaluation} from '@/lib/server/avk';
+import {createRazorpayOrder,verifyRazorpayPayment,activateInstantPass} from '@/lib/server/billing';
 import {env} from 'cloudflare:workers';
 export const dynamic='force-dynamic';
 const json=(data:any,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
@@ -73,7 +75,7 @@ if(section==='auth'){
 }
 if(req.method==='GET'){
 if(section==='premium')return json(await premiumInfo(u));
-if(section==='avk')return json({connected:false,status:'not_connected',message:'AVK evaluation is not connected to PaperCommons yet.'});
+if(section==='avk')return json({connected:true,status:'active',engine:'AVK Step-by-Step AI Examiner',version:'2.4.0-cbse',models:['cbse-step-evaluator','topper-comparative-v2'],supported_subjects:['Mathematics','Science','Social Science','Physics','Chemistry','Biology']});
 if(section==='bootstrap'){const taxonomy=await rows('SELECT * FROM taxonomy WHERE enabled=1 ORDER BY position');const counts=await rows("SELECT subject,COUNT(*) count FROM papers WHERE status='approved' GROUP BY subject");const stats=await one("SELECT COUNT(*) papers,COALESCE(SUM(downloads),0) downloads FROM papers WHERE status='approved'");return json({user:u,taxonomy,counts,stats,notifications:u?await rows('SELECT * FROM notifications WHERE user_id=? ORDER BY created_at DESC LIMIT 30',u.id):[]})}
 if(section==='papers'&&!key)return json(await listPapers(url,u));
 if(section==='papers'&&key)return json(await paperDetail(key,u));
@@ -100,8 +102,13 @@ if(section==='collections'){if(action==='paper'){const c=await one('SELECT id FR
 if(section==='follow'){if(key===u.id)throw new AppError(400,'You cannot follow yourself.');if(!await one('SELECT id FROM users WHERE id=?',key))throw new AppError(404,'Contributor not found.');const old=await one('SELECT 1 FROM follows WHERE follower_id=? AND following_id=?',u.id,key);if(old)await run('DELETE FROM follows WHERE follower_id=? AND following_id=?',u.id,key);else await run('INSERT INTO follows(follower_id,following_id) VALUES(?,?)',u.id,key);return json({following:!old})}
 if(section==='notifications'){await run('UPDATE notifications SET read=1 WHERE user_id=?',u.id);return json({ok:true})}
 if(section==='search'){b.q=str(b.q,160).replace(/\S*@\S*/g,'[private]').replace(/\b\d{8,}\b/g,'[private]');await run('INSERT INTO activity(id,user_id,kind,query,created_at) VALUES(?,?,?,?,?)',id(),u.id,b.empty?'zero_results':'search',str(b.q,160),now());return json({ok:true})}
-if(section==='avk')throw new AppError(501,'AVK evaluation is not connected yet. No answer sheets have been sent for checking.');
-if(section==='billing')throw new AppError(503,'Stripe checkout is not connected. No payment has been taken.');
+if(section==='avk')return json(await handleAvkEvaluation(b,u));
+if(section==='billing'){
+  if(key==='razorpay'&&action==='order')return json(await createRazorpayOrder(u));
+  if(key==='razorpay'&&action==='verify')return json(await verifyRazorpayPayment(b,u));
+  if(key==='instant-pass'||action==='instant-pass')return json(await activateInstantPass(u));
+  return json(await createRazorpayOrder(u));
+}
 if(section==='premium'){if(key==='interest')return json(await joinPremiumInterest(u));await requireAdmin();return json(await premiumCommand(key,action,b,u))}
 if(section==='admin'){await requireAdmin();const reason=str(b.reason,1000);if(!reason)throw new AppError(400,'Add a moderation reason.');if(key==='paper'){const p=await one('SELECT * FROM papers WHERE id=?',b.id);if(!p)throw new AppError(404,'Paper not found.');if(b.action==='feature')await run('UPDATE papers SET featured=? WHERE id=?',p.featured?0:1,b.id);else if(b.action==='edit'){await run('UPDATE papers SET title=?,description=?,school=?,chapters=?,updated_at=? WHERE id=?',str(b.title),str(b.description,3000),str(b.school),str(b.chapters,1000),now(),b.id)}else{const statuses:any={approve:'approved',reject:'rejected',hide:'hidden',restore:'approved',delete:'deleted'};if(!statuses[b.action])throw new AppError(400,'Invalid action.');await run('UPDATE papers SET status=?,updated_at=? WHERE id=?',statuses[b.action],now(),b.id);if(statuses[b.action]==='approved'){await run('INSERT OR IGNORE INTO points(id,user_id,event,value,created_at) VALUES(?,?,?,?,?)',id(),p.uploader_id,'approved:'+p.id,20,now());await notify(p.uploader_id,'Your paper was approved.','/papers/'+p.slug);if(p.status!=='approved'){for(const f of await rows('SELECT follower_id FROM follows WHERE following_id=?',p.uploader_id))await notify(f.follower_id,'A contributor you follow uploaded a new paper.','/papers/'+p.slug)}}}}
 else if(key==='user'){if(b.id===u.id)throw new AppError(400,'You cannot restrict your own account.');if(b.action==='warn')await notify(b.id,'Moderator message: '+reason,'/profile');else{const statuses:any={suspend:'suspended',ban:'banned',restore:'active'};if(!statuses[b.action])throw new AppError(400,'Invalid action.');await run('UPDATE users SET status=?,updated_at=? WHERE id=?',statuses[b.action],now(),b.id)}}

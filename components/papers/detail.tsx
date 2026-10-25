@@ -18,6 +18,8 @@ export function PaperDetail({slug,user,onReport,initialData=null}:{slug:string;u
   const [engineModal,setEngineModal]=useState(false);
   const [evaluating,setEvaluating]=useState(false);
   const [evalResult,setEvalResult]=useState(false);
+  const [evalData,setEvalData]=useState<any>(null);
+  const [studentAnswerText,setStudentAnswerText]=useState('Given:\nInitial velocity u = 25 m/s\nFinal velocity v = 0 m/s\nDeceleration a = -2.5 m/s^2\n\nFormula: v^2 = u^2 + 2as\n0 = (25)^2 + 2(-2.5)s\n0 = 625 - 5s\n5s = 625\ns = 125 m');
 
   const load=()=>api('papers/'+slug).then(d=>{setD(d);setError('')}).catch(e=>setError(e.message));
   useEffect(()=>{load()},[slug,user?.id,user?.plan,user?.premium_until]);
@@ -33,13 +35,30 @@ export function PaperDetail({slug,user,onReport,initialData=null}:{slug:string;u
   const p=d.paper;
   const comments=[...d.comments].sort((a,b)=>sort==='Top'?b.likes-a.likes:sort==='Newest'?b.created_at.localeCompare(a.created_at):a.created_at.localeCompare(b.created_at));
 
-  const runAiDemo=()=>{
+  const runAiEvaluation=async()=>{
     setEvaluating(true);
-    setTimeout(()=>{
+    try {
+      const res = await fetch('/api/avk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paperId: p.id,
+          textSubmission: studentAnswerText
+        })
+      });
+      const data: any = await res.json();
+      if (data.ok && data.result) {
+        setEvalData(data.result);
+        setEvalResult(true);
+        toast.success(`AVK Evaluation Complete! ${data.result.total} / 10 Marks Awarded.`);
+      } else {
+        toast.error(data.error || 'Evaluation failed. Sign in with PRO Pass.');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Evaluation request failed.');
+    } finally {
       setEvaluating(false);
-      setEvalResult(true);
-      toast.success('AI Step-by-Step Evaluation Complete! 3.5 / 4 Marks Awarded.');
-    }, 1200);
+    }
   };
 
   const comment=(c:any,nested=false)=>(
@@ -221,17 +240,32 @@ export function PaperDetail({slug,user,onReport,initialData=null}:{slug:string;u
               </div>
 
               <button
-                onClick={runAiDemo}
+                onClick={runAiEvaluation}
                 disabled={evaluating}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-xs flex items-center gap-1.5 shadow-md shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 <Sparkles size={14}/>
-                <span>{evaluating?'Evaluating Steps…':'Run Sample AI Evaluation'}</span>
+                <span>{evaluating?'Evaluating Steps with AVK…':'Evaluate Solution Steps'}</span>
               </button>
             </div>
 
+            {/* Answer Input Area */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-bold text-slate-300 flex items-center justify-between">
+                <span>Enter Your Written Answer Steps or Paste Practice Work:</span>
+                <span className="text-[11px] text-cyan-400 font-normal">Formula · Substitution · Final Unit</span>
+              </label>
+              <textarea
+                rows={5}
+                value={studentAnswerText}
+                onChange={(e)=>setStudentAnswerText(e.target.value)}
+                placeholder="Write or paste your practice attempt here..."
+                className="bg-[#131B2E] border-2 border-slate-700 text-white font-mono text-xs p-3 rounded-xl focus:border-cyan-400 focus:outline-none"
+              />
+            </div>
+
             {/* Interactive Upload or Sample Evaluation Result */}
-            {evalResult ? (
+            {evalResult && evalData ? (
               <div className="flex flex-col gap-4 animate-in fade-in duration-300">
                 <div className="p-4 rounded-xl bg-[#131B2E] border-2 border-emerald-500/40">
                   <div className="flex items-center justify-between">
@@ -240,39 +274,50 @@ export function PaperDetail({slug,user,onReport,initialData=null}:{slug:string;u
                         <Check size={18}/>
                       </span>
                       <div>
-                        <div className="text-sm font-black text-white">Diagnostic Score: 3.5 / 4.0 Marks (87.5%)</div>
-                        <div className="text-[11px] text-slate-400">Target Grade: A1 (Board 95% Cutoff)</div>
+                        <div className="text-sm font-black text-white">Diagnostic Score: {evalData.total} / 10.0 Marks ({(evalData.total * 10).toFixed(0)}%)</div>
+                        <div className="text-[11px] text-slate-400">AVK Confidence: {(evalData.confidence * 100).toFixed(0)}% · Target Grade: A1</div>
                       </div>
                     </div>
                     <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-black text-xs">
-                      Strong Answer
+                      Evaluated by AVK
                     </span>
                   </div>
 
                   <div className="mt-4 space-y-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-[#070B14] flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">✓ Step 1: Definition &amp; Formula Stated</span>
-                      <span className="font-bold text-emerald-400">+1.0 / 1.0</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[#070B14] flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">⚡ Step 2: Substitution &amp; Sign Convention (Minor slip in algebra)</span>
-                      <span className="font-bold text-amber-400">+1.5 / 2.0</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[#070B14] flex items-center justify-between">
-                      <span className="text-slate-300 font-medium">✓ Step 3: Final Magnitude &amp; S.I. Units Boxed</span>
-                      <span className="font-bold text-emerald-400">+1.0 / 1.0</span>
-                    </div>
+                    {evalData.questions.map((q: any, idx: number) => (
+                      <div key={idx} className="p-3 rounded-lg bg-[#070B14] border border-slate-800">
+                        <div className="flex items-center justify-between font-bold text-white mb-1">
+                          <span>{q.question}</span>
+                          <span className={q.marks === q.maximum ? 'text-emerald-400' : 'text-amber-400'}>
+                            +{q.marks.toFixed(1)} / {q.maximum.toFixed(1)}
+                          </span>
+                        </div>
+                        <p className="text-slate-300 text-[11px] mb-1">{q.feedback}</p>
+                        {q.mistakes && q.mistakes.length > 0 && q.mistakes[0] !== 'None observed. Precise step sequence followed.' && (
+                          <div className="text-rose-400 text-[11px] flex items-center gap-1 mt-1">
+                            <span>⚠️ {q.mistakes.join('; ')}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
 
-                  <div className="mt-3 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-200">
-                    <strong>AI Examiner Feedback:</strong> Correct formula cited and final answer matches standard key. In Step 2, ensure all negative signs for deceleration are explicitly carried over in the second line to prevent potential -0.5 mark deduction.
-                  </div>
+                  {evalData.improvements && evalData.improvements.length > 0 && (
+                    <div className="mt-3 p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-xs text-cyan-200">
+                      <strong>Topper Benchmark Insights:</strong>
+                      <ul className="list-disc pl-4 mt-1 space-y-0.5 text-[11px]">
+                        {evalData.improvements.map((imp: string, i: number) => (
+                          <li key={i}>{imp}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Want to evaluate your own handwritten response sheet?</span>
-                  <button onClick={()=>toast.info('Answer sheet scanner ready. Sign in with PRO Pass.')} className="font-bold text-amber-400 hover:underline">
-                    Upload Written PDF Sheet →
+                  <span className="text-slate-400">Want full unlimited answer sheet scans?</span>
+                  <button onClick={()=>setProModal(true)} className="font-bold text-amber-400 hover:underline">
+                    Upgrade to PRO Pass (₹299/mo) →
                   </button>
                 </div>
               </div>
@@ -281,13 +326,13 @@ export function PaperDetail({slug,user,onReport,initialData=null}:{slug:string;u
                 <div className="w-12 h-12 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center">
                   <UploadCloud size={24}/>
                 </div>
-                <h4 className="text-base font-bold text-white">Upload Your Written Solution Sheet</h4>
+                <h4 className="text-base font-bold text-white">AVK AI Automated Step Evaluator</h4>
                 <p className="text-xs text-slate-400 max-w-md">
-                  Upload photos or scanned PDF of your practice attempt. The PaperVault AI evaluates step by step, marks deductions, and compares against the topper baseline.
+                  Check your practice calculation steps, formula statements, and sign conventions instantly against official board marking schemes.
                 </p>
                 <div className="flex gap-2 mt-2">
-                  <button onClick={runAiDemo} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs cursor-pointer shadow-md">
-                    Try Demo Evaluation
+                  <button onClick={runAiEvaluation} className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold text-xs cursor-pointer shadow-md">
+                    Check Solution with AVK
                   </button>
                   <button onClick={()=>setProModal(true)} className="px-4 py-2.5 rounded-xl bg-[#0C1222] border border-amber-500/40 text-amber-300 font-extrabold text-xs cursor-pointer">
                     Unlock PRO AI Pass

@@ -114,6 +114,11 @@ export function SiteHeader({
                   <ShieldCheck size={13} />
                   <span>Admin: vihan.agrawal4@gmail.com</span>
                 </span>
+              ) : user?.plan === 'premium' ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/60 text-emerald-300 text-xs font-black uppercase tracking-wider">
+                  <Crown size={13} className="text-amber-400 fill-amber-400" />
+                  <span>PRO Active</span>
+                </span>
               ) : (
                 <button
                   onClick={() => setProModal(true)}

@@ -1,7 +1,7 @@
 import {AppError,isPremium,str} from './auth';
 import {db,id,now,one,rows,run} from './db';
 
-export const PREMIUM_PLAN={id:'papercommons-premium-monthly',price_inr:299,currency:'INR',interval:'month',checkout_enabled:false,avk_connected:false} as const;
+export const PREMIUM_PLAN={id:'papercommons-premium-monthly',price_inr:299,currency:'INR',interval:'month',checkout_enabled:true,avk_connected:true} as const;
 export function paperAccess(p:any,user:any){return !p.premium_only||isPremium(user)||(user?.status==='active'&&p.uploader_id===user?.id)}
 export function withPaperAccess(p:any,user:any){return {...p,can_access:paperAccess(p,user)}}
 export function assertPaperAccess(p:any,user:any){if(!paperAccess(p,user))throw new AppError(403,'Premium access is required to open or download this paper. You can view its details on the paper page.')}
