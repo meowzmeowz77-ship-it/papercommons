@@ -4,3 +4,5 @@ Disallow: /admin
 Disallow: /api/
 Disallow: /profile
 Disallow: /saved
+
+Sitemap: https://queens-championship-noticed-cleaners.trycloudflare.com/sitemap.xml
