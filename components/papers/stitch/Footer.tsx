@@ -121,25 +121,25 @@ export const Footer: React.FC<FooterProps> = ({ onSelectTab }) => {
           <p className="text-xs text-slate-500 font-medium">
             © 2026 PaperVault PRO Academic Exchange. Crafted for focused, zero-distraction board prep.
           </p>
-          <div className="flex items-center gap-6 text-xs text-slate-400">
-            <button
-              onClick={() => onSelectTab('community')}
-              className="hover:text-amber-400 transition-colors cursor-pointer"
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-5 text-xs text-slate-400">
+            <a
+              href="/privacy"
+              className="hover:text-amber-400 transition-colors"
             >
-              Privacy Promise
-            </button>
-            <button
-              onClick={() => onSelectTab('community')}
-              className="hover:text-amber-400 transition-colors cursor-pointer"
+              Privacy Policy
+            </a>
+            <a
+              href="/terms"
+              className="hover:text-amber-400 transition-colors"
             >
-              Student Code of Conduct
-            </button>
-            <button
-              onClick={() => onSelectTab('community')}
-              className="hover:text-amber-400 transition-colors cursor-pointer"
+              Terms of Service
+            </a>
+            <a
+              href="mailto:support@papercommons.org"
+              className="hover:text-amber-400 transition-colors"
             >
-              Report Infringement
-            </button>
+              Support: support@papercommons.org
+            </a>
           </div>
         </div>
       </div>

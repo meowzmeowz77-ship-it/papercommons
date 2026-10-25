@@ -54,6 +54,9 @@ export default defineConfig((async ({ command }: any): Promise<any> => {
   return {
     server: {
       allowedHosts: true,
+      watch: {
+        ignored: ['**/backups/**', '**/.wrangler/**', '**/.git/**', '**/scripts/**'],
+      },
       ...(managedLinux
         ? { host: "0.0.0.0" }
         : {}),

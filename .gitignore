@@ -34,6 +34,8 @@ yarn-error.log*
 
 # vercel
 .vercel
+/backups/
+*.sqlite
 
 # typescript
 next-env.d.ts
