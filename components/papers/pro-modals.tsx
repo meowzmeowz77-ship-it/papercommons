@@ -21,6 +21,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { animateCounter } from '@/lib/animations';
+import { RazorpayCheckoutModal } from './razorpay-modal';
 
 interface ProPassModalProps {
   open: boolean;
@@ -55,6 +56,8 @@ export function ProPassModal({ open, onOpenChange, onActivateTestPass }: ProPass
   ];
 
   const [paying, setPaying] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
+  const [orderId, setOrderId] = useState<string>('');
 
   const loadRazorpaySdk = (): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -79,6 +82,8 @@ export function ProPassModal({ open, onOpenChange, onActivateTestPass }: ProPass
         throw new Error('Unable to generate payment order. Please ensure you are signed in.');
       }
       const orderData: any = await orderRes.json();
+      setOrderId(orderData.orderId);
+
       const hasSdk = await loadRazorpaySdk();
 
       if (hasSdk && (window as any).Razorpay && !orderData.testMode) {
@@ -115,25 +120,8 @@ export function ProPassModal({ open, onOpenChange, onActivateTestPass }: ProPass
         });
         rzp.open();
       } else {
-        // Test mode: execute instant simulated payment verification
-        const verifyRes = await fetch('/api/billing/razorpay/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            razorpay_payment_id: 'pay_rzp_' + Math.random().toString(36).substring(2, 9),
-            razorpay_order_id: orderData.orderId,
-            test_pass: true
-          })
-        });
-        const verifyData: any = await verifyRes.json();
-        if (verifyData.ok) {
-          toast.success('👑 PaperVault PRO Activated! Welcome to Topper Library.', { duration: 5000 });
-          onOpenChange(false);
-          onActivateTestPass?.();
-          setTimeout(() => location.reload(), 900);
-        } else {
-          toast.error(verifyData.error || 'Activation failed.');
-        }
+        // Open the authentic Razorpay Checkout modal (UPI QR, GPay, Cards, NetBanking)
+        setRazorpayOpen(true);
       }
     } catch (e: any) {
       toast.error(e.message || 'Payment initiation failed.');
@@ -142,83 +130,51 @@ export function ProPassModal({ open, onOpenChange, onActivateTestPass }: ProPass
     }
   };
 
-  const handleInstantPass = async () => {
-    setActivating(true);
-    try {
-      const res = await fetch('/api/billing/instant-pass', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
-      const data: any = await res.json();
-      if (data.ok) {
-        toast.success('👑 30-Day PaperVault PRO Pass Activated! Enjoy full access.', { duration: 5000 });
-        onOpenChange(false);
-        onActivateTestPass?.();
-        setTimeout(() => location.reload(), 800);
-      } else {
-        toast.error(data.error || 'Activation failed.');
-      }
-    } catch (e: any) {
-      toast.error(e.message || 'Activation failed.');
-    } finally {
-      setActivating(false);
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl bg-[#0C1222] border-2 border-amber-500/50 text-[#F8FAFC] shadow-[0_0_50px_rgba(245,158,11,0.25)] rounded-2xl p-5 sm:p-8 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/60 text-amber-400 text-xs font-black uppercase tracking-wider">
-              <Crown size={14} className="text-amber-400" />
-              PaperVault PRO Member Pass
-            </span>
-          </div>
-          <DialogTitle className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Unlock the Full{' '}
-            <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">
-              Board Topper Arsenal
-            </span>
-          </DialogTitle>
-          <DialogDescription className="text-slate-400 text-xs sm:text-sm font-medium mt-1">
-            Accelerate your exam preparation with verified marking schemes, step-by-step AI grading, and realistic test simulators.
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Pricing Banner with Razorpay Checkout */}
-        <div className="my-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/10 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="text-[11px] uppercase font-black text-amber-400 tracking-wider">PRO Member Plan</div>
-            <div className="flex items-baseline gap-1.5 mt-0.5">
-              <span className="text-3xl font-black text-white">₹299</span>
-              <span className="text-xs font-semibold text-slate-400">/ month</span>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-xl bg-[#0C1222] border-2 border-amber-500/50 text-[#F8FAFC] shadow-[0_0_50px_rgba(245,158,11,0.25)] rounded-2xl p-5 sm:p-8 max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/60 text-amber-400 text-xs font-black uppercase tracking-wider">
+                <Crown size={14} className="text-amber-400" />
+                PaperVault PRO Member Pass
+              </span>
             </div>
-            <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
-              <CheckCircle2 size={12} /> Razorpay UPI, GPay, Cards &amp; NetBanking
-            </span>
+            <DialogTitle className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              Unlock the Full{' '}
+              <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 bg-clip-text text-transparent">
+                Board Topper Arsenal
+              </span>
+            </DialogTitle>
+            <DialogDescription className="text-slate-400 text-xs sm:text-sm font-medium mt-1">
+              Accelerate your exam preparation with verified marking schemes, step-by-step AI grading, and realistic test simulators.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Pricing Banner with Razorpay Checkout */}
+          <div className="my-4 p-4 rounded-xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/10 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div className="text-[11px] uppercase font-black text-amber-400 tracking-wider">PRO Member Plan</div>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <span className="text-3xl font-black text-white">₹299</span>
+                <span className="text-xs font-semibold text-slate-400">/ month</span>
+              </div>
+              <span className="text-[11px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                <CheckCircle2 size={12} /> Razorpay UPI, GPay, Cards &amp; NetBanking
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={handleRazorpayPayment}
+                disabled={paying}
+                className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Zap size={15} className="fill-slate-950" />
+                <span>{paying ? 'Connecting Gateway…' : 'Proceed to Payment (₹299)'}</span>
+              </button>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={handleRazorpayPayment}
-              disabled={paying || activating}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30 cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <Zap size={14} className="fill-slate-950" />
-              <span>{paying ? 'Connecting…' : 'Pay ₹299 (Razorpay)'}</span>
-            </button>
-            <button
-              onClick={handleInstantPass}
-              disabled={paying || activating}
-              className="px-3.5 py-2.5 rounded-xl bg-[#131B2E] hover:bg-[#1E293B] border border-amber-500/40 text-amber-300 font-black text-xs uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1"
-              title="Instant 1-click test pass"
-            >
-              <Sparkles size={13} />
-              <span>{activating ? 'Granting…' : 'Instant 30-Day Pass'}</span>
-            </button>
-          </div>
-        </div>
 
         {/* Perks Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 my-2">
@@ -252,6 +208,18 @@ export function ProPassModal({ open, onOpenChange, onActivateTestPass }: ProPass
         </div>
       </DialogContent>
     </Dialog>
+
+    <RazorpayCheckoutModal
+      open={razorpayOpen}
+      onOpenChange={setRazorpayOpen}
+      orderId={orderId}
+      amount={299}
+      onSuccess={() => {
+        onOpenChange(false);
+        onActivateTestPass?.();
+      }}
+    />
+  </>
   );
 }
 

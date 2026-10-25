@@ -28,7 +28,7 @@ export function StitchHome({boot,papers,total,query,setQuery,filters,setFilters,
   const tab=sort==='newest'?'recent':sort==='rating'?'rated':sort;
   const active=Object.entries(filters).filter(([,v])=>v);
 
-  return <div className="stitch-native flex flex-col gap-10">
+  return <div className="stitch-native flex flex-col gap-6 sm:gap-8 md:gap-10">
     <HeroSearch onSearch={()=>{track('search');api('search',{q:query,empty:total===0}).catch(()=>{});document.getElementById('feed-anchor')?.scrollIntoView({block:'start'})}} searchQuery={query} onSearchChange={q=>{setQuery(q);if(q.trim())setFilters({...filters,subject:''})}} activeFilter={filter} onFilterChange={chooseFilter} onOpenUpload={()=>location.href='/upload'} counts={{all:boot?.stats?.papers||total,mathematics:boot?.counts?.find((c:any)=>c.subject==='Mathematics')?.count||0,science:boot?.counts?.find((c:any)=>c.subject==='Science')?.count||0}} matches={papers.map(p=>({title:p.title,meta:p.board+' • Class '+p.grade,tag:p.subject}))}/>
     
     {/* Shortcuts */}

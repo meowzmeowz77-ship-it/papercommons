@@ -17,12 +17,14 @@ import { api, date } from '@/lib/client';
 import { track } from '@/lib/analytics-client';
 import { toast } from 'sonner';
 import { ProPassModal } from './pro-modals';
+import { RazorpayCheckoutModal } from './razorpay-modal';
 
 export function PremiumPage({ user }: { user?: User }) {
   const [info, setInfo] = useState<any>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [proModal, setProModal] = useState(false);
+  const [razorpayOpen, setRazorpayOpen] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -84,11 +86,11 @@ export function PremiumPage({ user }: { user?: User }) {
             <CheckCircle2 size={12} /> Razorpay UPI &amp; Cards Enabled
           </span>
           <button
-            onClick={() => setProModal(true)}
+            onClick={() => setRazorpayOpen(true)}
             className="mt-3 w-full py-2.5 px-5 rounded-xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg shadow-orange-500/30 cursor-pointer flex items-center justify-center gap-1.5"
           >
             <Zap size={14} className="fill-slate-950" />
-            <span>{info?.active ? 'Manage Plan' : 'Upgrade to PRO'}</span>
+            <span>{info?.active ? 'Plan Active' : 'Upgrade to PRO (₹299)'}</span>
           </button>
         </div>
       </div>
@@ -137,17 +139,16 @@ export function PremiumPage({ user }: { user?: User }) {
           {!info?.active && (
             <div className="mt-4 flex flex-wrap gap-2">
               <button
-                onClick={() => setProModal(true)}
-                className="btn primary text-xs font-black py-2 px-4 rounded-xl flex items-center gap-1.5 cursor-pointer"
+                onClick={() => setRazorpayOpen(true)}
+                className="btn primary text-xs font-black py-2.5 px-5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-lg shadow-orange-500/25"
               >
                 <Crown size={14} /> Pay ₹299 (Razorpay Checkout)
               </button>
               <button
-                onClick={handleInstantPass}
-                disabled={busy}
-                className="btn text-xs font-black py-2 px-4 rounded-xl bg-[#131B2E] border border-amber-500/40 text-amber-300 hover:bg-[#1E293B] flex items-center gap-1.5 cursor-pointer"
+                onClick={() => setProModal(true)}
+                className="btn text-xs font-bold py-2.5 px-4 rounded-xl bg-[#131B2E] border border-slate-700 text-slate-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
               >
-                <Sparkles size={14} /> {busy ? 'Activating…' : 'Activate 30-Day Instant Pass'}
+                <Sparkles size={14} className="text-amber-400" /> View All PRO Perks
               </button>
             </div>
           )}
@@ -237,6 +238,12 @@ export function PremiumPage({ user }: { user?: User }) {
       </div>
 
       <ProPassModal open={proModal} onOpenChange={setProModal} />
+      <RazorpayCheckoutModal
+        open={razorpayOpen}
+        onOpenChange={setRazorpayOpen}
+        amount={299}
+        onSuccess={() => location.reload()}
+      />
     </div>
   );
 }

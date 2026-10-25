@@ -72,13 +72,13 @@ export function SiteHeader({
         </a>
 
         {/* Top 2-Section Switcher & Academic Strip */}
-        <div className="bg-[#050811] border-b border-slate-800/90 px-4 sm:px-8 py-1.5">
-          <div className="max-w-[1280px] mx-auto flex items-center justify-between text-slate-300 text-xs font-semibold gap-3 flex-wrap">
+        <div className="bg-[#050811] border-b border-slate-800/90 px-3 sm:px-8 py-1.5">
+          <div className="max-w-[1280px] mx-auto flex items-center justify-between text-slate-300 text-xs font-semibold gap-2">
             {/* 2-Section Switcher: Normal User Section vs Admin Section */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-[#0C1222] border border-slate-800 text-xs font-bold shrink-0">
+            <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-xl bg-[#0C1222] border border-slate-800 text-[11px] sm:text-xs font-bold shrink-0">
               <a
                 href="/"
-                className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 ${
                   page !== 'admin'
                     ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-black shadow-sm'
                     : 'text-slate-400 hover:text-white'
@@ -86,11 +86,12 @@ export function SiteHeader({
                 title="Normal User Section - Study Commons & Papers"
               >
                 <BookOpen size={12} />
-                <span>User Section</span>
+                <span className="hidden sm:inline">User Section</span>
+                <span className="sm:hidden">Papers</span>
               </a>
               <a
                 href="/admin"
-                className={`px-3 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
+                className={`px-2.5 sm:px-3 py-1 rounded-lg transition-all flex items-center gap-1 sm:gap-1.5 ${
                   page === 'admin'
                     ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 font-black shadow-sm'
                     : user?.role === 'admin'
@@ -100,7 +101,8 @@ export function SiteHeader({
                 title="Admin Section - Analytics & Moderation (Restricted to vihan.agrawal4@gmail.com)"
               >
                 <ShieldCheck size={12} className={user?.role === 'admin' ? 'text-slate-950' : 'text-orange-400'} />
-                <span>Admin Analytics</span>
+                <span className="hidden sm:inline">Admin Analytics</span>
+                <span className="sm:hidden">Admin</span>
                 {user?.role === 'admin' ? (
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Admin active"></span>
                 ) : null}
@@ -108,24 +110,26 @@ export function SiteHeader({
             </div>
 
             {/* Academic Notice & Role Status */}
-            <div className="flex items-center gap-3 shrink-0 ml-auto">
+            <div className="flex items-center gap-2 shrink-0">
               {user?.role === 'admin' ? (
-                <span className="inline-flex items-center gap-1.5 text-xs text-orange-400 font-bold font-mono bg-[#131B2E] px-2.5 py-0.5 rounded-lg border border-orange-500/30">
-                  <ShieldCheck size={13} />
-                  <span>Admin: vihan.agrawal4@gmail.com</span>
+                <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-orange-400 font-bold font-mono bg-[#131B2E] px-2 sm:px-2.5 py-0.5 rounded-lg border border-orange-500/30">
+                  <ShieldCheck size={12} />
+                  <span className="hidden sm:inline">Admin: vihan.agrawal4@gmail.com</span>
+                  <span className="sm:hidden">Admin Mode</span>
                 </span>
               ) : user?.plan === 'premium' ? (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/60 text-emerald-300 text-xs font-black uppercase tracking-wider">
-                  <Crown size={13} className="text-amber-400 fill-amber-400" />
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/60 text-emerald-300 text-[11px] sm:text-xs font-black uppercase tracking-wider">
+                  <Crown size={12} className="text-amber-400 fill-amber-400" />
                   <span>PRO Active</span>
                 </span>
               ) : (
                 <button
                   onClick={() => setProModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/60 text-amber-300 text-xs font-black uppercase tracking-wider ambient-gold-pulse hover:bg-amber-500/30 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-500/60 text-amber-300 text-[11px] sm:text-xs font-black uppercase tracking-wider ambient-gold-pulse hover:bg-amber-500/30 transition-all cursor-pointer whitespace-nowrap"
                 >
-                  <Crown size={13} className="text-amber-400" />
-                  <span>PRO Pass (₹299/mo)</span>
+                  <Crown size={12} className="text-amber-400" />
+                  <span className="hidden sm:inline">PRO Pass (₹299/mo)</span>
+                  <span className="sm:hidden">PRO (₹299)</span>
                 </button>
               )}
             </div>

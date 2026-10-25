@@ -84,7 +84,7 @@ export const PaperCard: React.FC<PaperCardProps> = ({
       onMouseMove={(e) => handleCardTilt(e, cardRef.current)}
       onMouseLeave={() => resetCardTilt(cardRef.current)}
       style={{ animationDelay: `${(index + 1) * 0.07}s` }}
-      className="stitch-paper-card pro-card-perspective bg-[#0C1222] p-5 md:p-6 rounded-2xl border-2 border-slate-800 hover:border-amber-500/60 shadow-xl flex flex-col justify-between gap-4 relative group overflow-hidden"
+      className="stitch-paper-card pro-card-perspective bg-[#0C1222] p-4 sm:p-5 md:p-6 rounded-2xl border-2 border-slate-800 hover:border-amber-500/60 shadow-xl flex flex-col justify-between gap-3.5 sm:gap-4 relative group overflow-hidden"
     >
       {/* Exclusive Pre-Board Sets Top-Right Ribbon */}
       {isExclusiveMock && (

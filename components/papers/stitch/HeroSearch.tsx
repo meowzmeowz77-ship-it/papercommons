@@ -71,15 +71,15 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       </div>
 
       {/* Hero Headline & Direct Actions */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6">
         <div className="flex flex-col max-w-3xl">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-[1.12]">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.14]">
             Find real question papers.{' '}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500 drop-shadow-md">
               Practice smarter.
             </span>
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base md:text-lg mt-3 leading-relaxed font-semibold">
+          <p className="text-slate-300 text-xs sm:text-base md:text-lg mt-2 sm:mt-3 leading-relaxed font-semibold">
             The student-led repository for CBSE, ICSE &amp; State Board pre-boards, unit tests, and verified topper solutions.
           </p>
         </div>
@@ -87,9 +87,9 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
         <div className="shrink-0 flex items-center gap-3">
           <button
             onClick={onOpenUpload}
-            className="btn-cta-glow inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-sm px-6 py-3 rounded-xl transition-all duration-200 border-2 border-orange-400/50 hover:scale-105 active:scale-95 shimmer-badge shadow-xl cursor-pointer"
+            className="btn-cta-glow w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 via-orange-600 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-slate-950 font-black text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all duration-200 border-2 border-orange-400/50 hover:scale-105 active:scale-95 shimmer-badge shadow-xl cursor-pointer"
           >
-            <Sparkles size={18} />
+            <Sparkles size={16} />
             <span>+ Upload Paper</span>
           </button>
         </div>
